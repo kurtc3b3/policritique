@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, SecretStr, computed_field
+from pydantic import Field, SecretStr, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -73,6 +73,18 @@ class Settings(BaseSettings):
     api_host: str = Field(default="127.0.0.1", validation_alias="API_HOST")
     api_port: int = Field(default=8000, validation_alias="API_PORT")
     api_reload: bool = Field(default=False, validation_alias="API_RELOAD")
+
+    @field_validator("db_path", mode="before")
+    @classmethod
+    def empty_db_path_is_none(cls, value: object) -> Path | None:
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        path = Path(value) if not isinstance(value, Path) else value
+        if path == Path("."):
+            return None
+        return path
 
     @computed_field  # type: ignore[prop-decorator]
     @property
