@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass
+from urllib.parse import urlencode
 
 import httpx
 
@@ -72,7 +73,15 @@ class ManifestoProjectClient:
         query = {"api_key": api_key, **(params or {})}
         async with httpx.AsyncClient(timeout=self.timeout, follow_redirects=True) as client:
             if method == "POST":
-                response = await client.post(url, params=query, data=form)
+                if form:
+                    response = await client.post(
+                        url,
+                        params=query,
+                        content=encode_form_data(form),
+                        headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    )
+                else:
+                    response = await client.post(url, params=query)
             else:
                 response = await client.get(url, params=query)
             response.raise_for_status()
@@ -128,7 +137,9 @@ class ManifestoProjectClient:
             batch = records[offset : offset + BATCH_SIZE]
             metadata_items = await self.fetch_metadata([record.query_key for record in batch])
             metadata_by_key = {
-                str(item.get("key") or item.get("query_key") or ""): item for item in metadata_items
+                key: item
+                for item in metadata_items
+                if (key := metadata_query_key(item))
             }
 
             text_keys: list[str] = []
@@ -136,9 +147,8 @@ class ManifestoProjectClient:
             for record in batch:
                 metadata = metadata_by_key.get(record.query_key, {})
                 manifesto_id = _optional_str(metadata.get("manifesto_id")) or record.query_key
-                if metadata.get("annotations") or metadata.get("text"):
-                    text_keys.append(manifesto_id)
-                    text_context[manifesto_id] = (record, metadata)
+                text_keys.append(manifesto_id)
+                text_context[manifesto_id] = (record, metadata)
 
             for text_offset in range(0, len(text_keys), BATCH_SIZE):
                 text_batch = text_keys[text_offset : text_offset + BATCH_SIZE]
@@ -167,6 +177,22 @@ class ManifestoProjectClient:
         return documents
 
 
+def metadata_query_key(item: dict) -> str | None:
+    key = _optional_str(item.get("key") or item.get("query_key"))
+    if key:
+        return key
+    party_id = item.get("party_id")
+    election_date = item.get("election_date")
+    if party_id is not None and election_date is not None:
+        return f"{party_id}_{election_date}"
+    return None
+
+
+def encode_form_data(fields: list[tuple[str, str]]) -> str:
+    """URL-encode repeated form fields for httpx AsyncClient POST bodies."""
+    return urlencode(fields, doseq=True)
+
+
 def parse_core_csv(text: str) -> list[ManifestoProjectRecord]:
     reader = csv.DictReader(io.StringIO(text))
     records: list[ManifestoProjectRecord] = []
@@ -193,6 +219,18 @@ def parse_core_csv(text: str) -> list[ManifestoProjectRecord]:
 
 
 def extract_corpus_text(item: dict) -> str | None:
+    items = item.get("items")
+    if isinstance(items, list):
+        parts = []
+        for entry in items:
+            if not isinstance(entry, dict):
+                continue
+            text = entry.get("text")
+            if text:
+                parts.append(str(text).strip())
+        if parts:
+            return "\n".join(parts)
+
     for key in ("text", "content", "body"):
         value = item.get(key)
         if isinstance(value, str) and value.strip():

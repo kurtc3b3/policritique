@@ -1,6 +1,8 @@
 from policritique.manifesto.party_pdfs import build_party_manifesto_sources
 from policritique.manifesto.project import (
+    encode_form_data,
     extract_corpus_text,
+    metadata_query_key,
     parse_core_csv,
     published_at_from_yyyymm,
 )
@@ -28,6 +30,29 @@ def test_extract_corpus_text():
 
 def test_published_at_from_yyyymm():
     assert published_at_from_yyyymm(201706) == "2017-06-01"
+
+
+def test_encode_form_data_repeats_keys():
+    encoded = encode_form_data([("keys[]", "51320_201706"), ("keys[]", "51620_201706")])
+    assert encoded == "keys%5B%5D=51320_201706&keys%5B%5D=51620_201706"
+
+
+def test_metadata_query_key_from_party_and_date():
+    assert metadata_query_key({"party_id": 51320, "election_date": "201706"}) == "51320_201706"
+    assert metadata_query_key({"key": "51421_202407"}) == "51421_202407"
+
+
+def test_extract_corpus_text_from_items():
+    text = extract_corpus_text(
+        {
+            "key": "51421_202407",
+            "items": [
+                {"text": "For a fair deal.", "cmp_code": "NA"},
+                {"text": "Build more homes.", "cmp_code": "416"},
+            ],
+        }
+    )
+    assert text == "For a fair deal.\nBuild more homes."
 
 
 def test_build_party_manifesto_sources():

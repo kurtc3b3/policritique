@@ -22,3 +22,11 @@ def test_cors_origins_parsed_from_env(monkeypatch):
 def test_default_cors_origins_constant_matches_settings_default():
     settings = Settings(_env_file=None)
     assert settings.cors_origins_raw == DEFAULT_CORS_ORIGINS
+
+
+def test_empty_db_path_uses_default(tmp_path, monkeypatch):
+    monkeypatch.setenv("DB_PATH", "")
+    settings = Settings()
+    assert settings.db_path is None
+    assert settings.resolved_db_path.name == "policritique.db"
+    assert settings.resolved_db_path.parent.name == "data"
