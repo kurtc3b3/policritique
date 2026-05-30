@@ -41,5 +41,6 @@ policritique/
 - [x] Election results collector
 - [x] MP list and contacts collector
 - [x] Manifesto / policy collector
-- [ ] HTTP API and analysis UI
+- [x] HTTP API (FastAPI + JWT auth)
+- [ ] Analysis UI
 - [ ] News API integration

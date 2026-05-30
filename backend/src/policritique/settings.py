@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, SecretStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -52,6 +52,23 @@ class Settings(BaseSettings):
         default="2025-1",
         validation_alias="MANIFESTO_PROJECT_METADATA_VERSION",
     )
+    secret_key: SecretStr = Field(
+        default=SecretStr("change-me-in-production"),
+        validation_alias="SECRET_KEY",
+    )
+    jwt_lifetime_seconds: int = Field(default=3600, validation_alias="JWT_LIFETIME_SECONDS")
+    cors_origins_raw: str = Field(
+        default="http://localhost:3000,http://localhost:8000",
+        validation_alias="CORS_ORIGINS",
+    )
+    api_host: str = Field(default="127.0.0.1", validation_alias="API_HOST")
+    api_port: int = Field(default=8000, validation_alias="API_PORT")
+    api_reload: bool = Field(default=False, validation_alias="API_RELOAD")
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def cors_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins_raw.split(",") if origin.strip()]
 
     @property
     def schema_path(self) -> Path:
