@@ -11,6 +11,15 @@ uv sync
 uv run policritique init-db
 ```
 
+Frontend:
+
+```bash
+cd frontend
+yarn install
+cp .env.example .env
+yarn dev
+```
+
 ## Layout
 
 ```
@@ -20,6 +29,7 @@ policritique/
 │   ├── data/                # SQLite database (gitignored)
 │   ├── pyproject.toml
 │   └── src/policritique/
+├── frontend/                # Vite + React UI (yarn)
 └── scripts/
     └── db/schema.sql        # SQL reference (ORM is source of truth)
 ```
@@ -34,6 +44,7 @@ policritique/
 ## Documentation
 
 - [backend/README.md](backend/README.md) — Python CLI and database
+- [frontend/README.md](frontend/README.md) — Vite React UI
 
 ## Roadmap
 
@@ -42,5 +53,5 @@ policritique/
 - [x] MP list and contacts collector
 - [x] Manifesto / policy collector
 - [x] HTTP API (FastAPI + JWT auth)
-- [ ] Analysis UI
+- [x] Analysis UI
 - [ ] News API integration

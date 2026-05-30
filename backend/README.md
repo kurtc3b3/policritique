@@ -91,7 +91,7 @@ Run from the `backend/` directory.
 | `MANIFESTO_PROJECT_METADATA_VERSION` | `2025-1` |
 | `SECRET_KEY` | `change-me-in-production` |
 | `JWT_LIFETIME_SECONDS` | `3600` |
-| `CORS_ORIGINS` | `http://localhost:3000,http://localhost:8000` |
+| `CORS_ORIGINS` | Vite (`5173`), Next (`3000`), and API (`8000`) on `localhost` and `127.0.0.1` |
 | `API_HOST` | `127.0.0.1` |
 | `API_PORT` | `8000` |
 | `API_RELOAD` | `false` |

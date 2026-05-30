@@ -11,6 +11,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_ROOT.parent
 
+DEFAULT_CORS_ORIGINS = (
+    "http://localhost:5173,"
+    "http://127.0.0.1:5173,"
+    "http://localhost:3000,"
+    "http://127.0.0.1:3000,"
+    "http://localhost:8000,"
+    "http://127.0.0.1:8000"
+)
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -58,7 +67,7 @@ class Settings(BaseSettings):
     )
     jwt_lifetime_seconds: int = Field(default=3600, validation_alias="JWT_LIFETIME_SECONDS")
     cors_origins_raw: str = Field(
-        default="http://localhost:3000,http://localhost:8000",
+        default=DEFAULT_CORS_ORIGINS,
         validation_alias="CORS_ORIGINS",
     )
     api_host: str = Field(default="127.0.0.1", validation_alias="API_HOST")
